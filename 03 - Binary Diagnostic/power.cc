@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <vector>
 
@@ -57,12 +58,14 @@ private:
   std::vector<uint32_t> o2Values{};
   std::vector<uint32_t> co2Values{};
 
-  void countO2() {
-    for (size_t currentMask = 1 << (bits - 1);
-         currentMask > 0 && o2Values.size() > 1; currentMask >>= 1) {
+  void
+  filterValues(std::vector<uint32_t> &values,
+               std::function<bool(uint32_t, uint32_t)> selectSetBit) const {
+    for (uint32_t currentMask = 1 << (bits - 1);
+         currentMask > 0 && values.size() > 1; currentMask >>= 1) {
       uint32_t zeroCount = 0;
       uint32_t oneCount = 0;
-      for (const auto value : o2Values) {
+      for (const auto value : values) {
         if ((value & currentMask) == 0) {
           ++zeroCount;
         } else {
@@ -70,8 +73,8 @@ private:
         }
       }
       std::vector<uint32_t> newValues{};
-      for (const auto value : o2Values) {
-        if (oneCount >= zeroCount) {
+      for (const auto value : values) {
+        if (selectSetBit(zeroCount, oneCount)) {
           if ((value & currentMask) != 0) {
             newValues.push_back(value);
           }
@@ -81,35 +84,7 @@ private:
           }
         }
       }
-      o2Values = std::move(newValues);
-    }
-  }
-
-  void countCO2() {
-    for (size_t currentMask = 1 << (bits - 1);
-         currentMask > 0 && co2Values.size() > 1; currentMask >>= 1) {
-      uint32_t zeroCount = 0;
-      uint32_t oneCount = 0;
-      for (const auto value : co2Values) {
-        if ((value & currentMask) == 0) {
-          ++zeroCount;
-        } else {
-          ++oneCount;
-        }
-      }
-      std::vector<uint32_t> newValues{};
-      for (const auto value : co2Values) {
-        if (zeroCount > oneCount) {
-          if ((value & currentMask) != 0) {
-            newValues.push_back(value);
-          }
-        } else {
-          if ((value & currentMask) == 0) {
-            newValues.push_back(value);
-          }
-        }
-      }
-      co2Values = std::move(newValues);
+      values = std::move(newValues);
     }
   }
 
@@ -123,8 +98,8 @@ public:
   }
 
   LifeSupportRates o2co2() {
-    countO2();
-    countCO2();
+    filterValues(o2Values, [](auto zero, auto one) { return zero <= one; });
+    filterValues(co2Values, [](auto zero, auto one) { return zero > one; });
     return {.o2 = o2Values[0], .co2 = co2Values[0]};
   }
 };
