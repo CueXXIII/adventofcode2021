@@ -125,8 +125,8 @@ public:
     const char *cline = line.c_str();
     char *cend;
     while (cline[0] != '\0') {
-      const auto ball = strtoul(cline, &cend, 10);
-      draws.numbers.push_back(static_cast<uint8_t>(ball));
+      const uint8_t ball = static_cast<uint8_t>(strtoul(cline, &cend, 10));
+      draws.numbers.push_back(ball);
       if (cend[0] == ',') {
         ++cend;
       }
@@ -164,14 +164,23 @@ int main(int argc, char **argv) {
     boards.push_back(board);
   }
 
+  bool firstWin = true;
+  size_t openBoards = boards.size();
   for (const auto ball : draws) {
     std::cout << "Drawing " << static_cast<int>(ball) << "\n";
     for (auto &board : boards) {
       auto res = board.ballDrawn(ball);
       if (res) {
-        std::cout << board;
-        std::cout << "We have a winner! Code=" << board.winningCode() << "\n";
-	return EXIT_SUCCESS;
+        --openBoards;
+        if (firstWin || openBoards == 0) {
+          std::cout << "The " << (firstWin ? "first" : "last")
+                    << " board wins! Code=" << board.winningCode() << "\n";
+          std::cout << board;
+          if (openBoards == 0) {
+            return EXIT_SUCCESS;
+          }
+          firstWin = false;
+        }
       }
     }
   }
