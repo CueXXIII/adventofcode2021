@@ -5,7 +5,7 @@
 #include <vector>
 
 // 500 lines on 1000x1000 grid -> uint16 per pixel
-class ParaxialOcean {
+class Ocean {
 private:
   const size_t width = 10;
   const size_t height = 10;
@@ -23,7 +23,7 @@ private:
   }
 
 public:
-  ParaxialOcean(const size_t width, const size_t height)
+  Ocean(const size_t width, const size_t height)
       : width(width), height(height), overlaps(0) {
     grid.resize(width * height);
   }
@@ -45,12 +45,30 @@ public:
       for (auto y = y1; y <= y2; ++y) {
         setPixel(x1, y);
       }
+    } else if (x1 + y2 == x2 + y1) {
+      // diagonal 1: x1-x2 == y1-y2 => x1+y2 == x2+y1
+      if (x2 < x1) {
+        std::swap(x1, x2);
+        std::swap(y1, y2);
+      }
+      for (auto n = 0; std::cmp_less_equal(n, x2 - x1); ++n) {
+        setPixel(x1 + n, y1 + n);
+      }
+    } else if (x1 + y1 == x2 + y2) {
+      // diagonal 2: x1-x2 == y2-y1 => x1+y1 == x2+y2
+      if (x2 < x1) {
+        std::swap(x1, x2);
+        std::swap(y1, y2);
+      }
+      for (auto n = 0; std::cmp_less_equal(n, x2 - x1); ++n) {
+        setPixel(x1 + n, y1 - n);
+      }
     }
   }
 
   size_t countOverlap() const { return overlaps; }
 
-  friend std::ifstream &operator>>(std::ifstream &in, ParaxialOcean &o) {
+  friend std::ifstream &operator>>(std::ifstream &in, Ocean &o) {
     std::string line;
     if (!std::getline(in, line)) {
       return in;
@@ -80,7 +98,7 @@ public:
     return in;
   }
 
-  friend std::ostream &operator<<(std::ostream &out, const ParaxialOcean o) {
+  friend std::ostream &operator<<(std::ostream &out, const Ocean &o) {
     for (auto y = 0u; y < o.height; ++y) {
       for (auto x = 0u; x < o.width; ++x) {
         const auto pixel = o.grid[o.pos(x, y)];
@@ -106,9 +124,9 @@ int main(int argc, char **argv) {
 
   std::ifstream infile{argv[1]};
 
-  ParaxialOcean ocean{1000, 1000};
+  Ocean ocean{1000, 1000};
   while (infile >> ocean)
     ;
   std::cout << "There are " << ocean.countOverlap()
-            << " pixels with paraxial lines overlapping\n";
+            << " pixels with lines overlapping\n";
 }
