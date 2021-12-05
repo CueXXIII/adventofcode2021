@@ -31,7 +31,6 @@ public:
   void addLine(size_t x1, size_t y1, size_t x2, size_t y2) {
     if (y1 == y2) {
       // horizontal
-      std::cout << "Add horizontal\n";
       if (x2 < x1) {
         std::swap(x1, x2);
       }
@@ -40,7 +39,6 @@ public:
       }
     } else if (x1 == x2) {
       // vertical
-      std::cout << "Add vertical\n";
       if (y2 < y1) {
         std::swap(y1, y2);
       }
@@ -78,7 +76,6 @@ public:
     }
     cline = cend + 1;
     const auto y2 = std::strtoul(cline, &cend, 10);
-    std::cout << x1 << ',' << y1 << " -> " << x2 << ',' << y2 << '\n';
     o.addLine(x1, y1, x2, y2);
     return in;
   }
@@ -112,7 +109,6 @@ int main(int argc, char **argv) {
   ParaxialOcean ocean{1000, 1000};
   while (infile >> ocean)
     ;
-  std::cout << ocean;
   std::cout << "There are " << ocean.countOverlap()
             << " pixels with paraxial lines overlapping\n";
 }
