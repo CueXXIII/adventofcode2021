@@ -1,5 +1,5 @@
 CXXFLAGS=-std=c++20 -O3 -Wall -Wextra -Wpedantic -Wconversion -g -ggdb
-OBJS=growth
+OBJS=growth growth-constexpr
 
 all: $(OBJS)
 
