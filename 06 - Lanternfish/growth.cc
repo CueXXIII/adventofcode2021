@@ -1,24 +1,20 @@
+#include <algorithm>
 #include <array>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <numeric>
 #include <string>
 
 void age(auto &lanternfish) {
   const auto spawns = lanternfish[0];
-  for (auto i = 0; i < 8; ++i) {
-    lanternfish[i] = lanternfish[i + 1];
-  }
+  std::copy(lanternfish.begin() + 1, lanternfish.end(), lanternfish.begin());
   lanternfish[8] = spawns;
   lanternfish[6] += spawns;
 }
 
-uint64_t count(auto &lanternfish) {
-  uint64_t sum = 0;
-  for (auto i = 0; i < 9; ++i) {
-    sum += lanternfish[i];
-  }
-  return sum;
+uint64_t count(const auto &lanternfish) {
+  return std::accumulate(lanternfish.begin(), lanternfish.end(), uint64_t{0});
 }
 
 int main(int argc, char **argv) {
@@ -34,7 +30,7 @@ int main(int argc, char **argv) {
   std::array<uint64_t, 9> lanternfish{0};
 
   for (auto c : ages) {
-    if (c >= '0' && c <= '9') {
+    if (c >= '0' && c <= '8') {
       lanternfish.at(c - '0') += 1;
     }
   }
