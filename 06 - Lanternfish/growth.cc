@@ -6,7 +6,7 @@
 
 int main(int argc, char **argv) {
   if (argc != 2) {
-    std::cerr << "Usage: " << argv[0] << " <example.txt>\n";
+    std::cerr << "Usage: " << argv[0] << " <ages.txt>\n";
     std::exit(EXIT_FAILURE);
   }
 
