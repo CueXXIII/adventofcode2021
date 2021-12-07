@@ -13,10 +13,10 @@ public:
   int16_t max;
 
 public:
-  int64_t fuelConsumption(int16_t destination) const {
+  int64_t fuelConsumption(int16_t destination, auto metric) const {
     return std::accumulate(positions.begin(), positions.end(), int64_t{0},
-                           [destination](auto a, auto b) {
-                             return a + std::abs(destination - b);
+                           [destination, metric](auto a, auto b) {
+                             return a + metric(destination, b);
                            });
   }
   friend std::ifstream &operator>>(std::ifstream &in, Positions &list) {
@@ -46,6 +46,18 @@ public:
   }
 };
 
+int64_t findMinimum(Positions &positions, auto metric) {
+  int64_t minFuel{positions.fuelConsumption(positions.min, metric)};
+  for (int16_t blast = positions.min + 1; blast <= positions.max; ++blast) {
+    const auto currentFuel{positions.fuelConsumption(blast, metric)};
+    if (currentFuel > minFuel) {
+      break;
+    }
+    minFuel = currentFuel;
+  }
+  return minFuel;
+}
+
 int main(int argc, char **argv) {
   if (argc != 2) {
     std::cerr << "Usage: " << argv[0] << " <positions.txt>\n";
@@ -56,14 +68,15 @@ int main(int argc, char **argv) {
   Positions positions;
   infile >> positions;
 
-  int64_t minFuel{positions.fuelConsumption(positions.min)};
-  for (int16_t blast = positions.min + 1; blast <= positions.max; ++blast) {
-    const auto currentFuel{positions.fuelConsumption(blast)};
-    if (currentFuel > minFuel) {
-      break;
-    }
-    minFuel = currentFuel;
-  }
+  const auto minDist =
+      findMinimum(positions, [](auto a, auto b) { return std::abs(a - b); });
+  const auto minFuel = findMinimum(positions, [](auto a, auto b) {
+    const auto dist{std::abs(a - b)};
+    return dist * (dist + 1) / 2;
+  });
 
-  std::cout << "The minimum fuel to align horizontally is " << minFuel << ".\n";
+  std::cout << "The minimum distance to align horizontally is " << minDist
+            << ".\n";
+  std::cout << "The minimum fuel used to align horizontally is " << minFuel
+            << ".\n";
 }
