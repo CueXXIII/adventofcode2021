@@ -5,31 +5,27 @@
 #include <numeric>
 #include <vector>
 
-class Positions {
-public:
-  std::vector<int16_t> positions;
+class Positions : public std::vector<int16_t> {
 
 public:
   int64_t fuelConsumption(int16_t destination, auto metric) const {
-    return std::accumulate(positions.begin(), positions.end(), int64_t{0},
+    return std::accumulate(this->begin(), this->end(), int64_t{0},
                            [destination, metric](auto a, auto b) {
                              return a + metric(destination, b);
                            });
   }
   friend std::ifstream &operator>>(std::ifstream &in, Positions &list) {
-    int16_t pos;
     char delim;
-    in >> pos;
-    list.positions.push_back(pos);
-    while (in >> delim && delim == ',') {
+    do {
+      int16_t pos;
       in >> pos;
-      list.positions.push_back(pos);
-    }
+      list.push_back(pos);
+    } while (in >> delim && delim == ',');
     return in;
   }
 
   friend std::ostream &operator<<(std::ostream &out, Positions &list) {
-    out << "Entries = " << list.positions.size() << "\n";
+    out << "Entries = " << list.size() << "\n";
     return out;
   }
 };
@@ -44,20 +40,19 @@ int main(int argc, char **argv) {
   Positions positions;
   infile >> positions;
 
-  auto &data = positions.positions;
-
-  const auto medianPosition{data.size() / 2};
-  const auto medianIterator{data.begin() + medianPosition};
-  std::nth_element(data.begin(), medianIterator, data.end());
-  const auto minDistPosition{data.at(medianPosition)};
+  const auto medianPosition{positions.size() / 2};
+  const auto medianIterator{positions.begin() + medianPosition};
+  std::nth_element(positions.begin(), medianIterator, positions.end());
+  const auto minDistPosition{positions.at(medianPosition)};
   const auto minDistFuel{positions.fuelConsumption(
       minDistPosition, [](auto a, auto b) { return std::abs(a - b); })};
   std::cout << "Found minimum at position " << minDistPosition << ",\n";
   std::cout << "The minimum distance to align horizontally is " << minDistFuel
             << ".\n";
 
-  const auto averageLow{std::accumulate(data.begin(), data.end(), int64_t{0}) /
-                        data.size()};
+  const auto averageLow{
+      std::accumulate(positions.begin(), positions.end(), int64_t{0}) /
+      positions.size()};
   const auto averageHigh{averageLow + 1};
 
   const auto triangleSum{[](auto a, auto b) {
