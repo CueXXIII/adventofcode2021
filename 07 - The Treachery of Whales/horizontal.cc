@@ -51,6 +51,7 @@ int64_t findMinimum(Positions &positions, auto metric) {
   for (int16_t blast = positions.min + 1; blast <= positions.max; ++blast) {
     const auto currentFuel{positions.fuelConsumption(blast, metric)};
     if (currentFuel > minFuel) {
+      std::cout << "Found minimum at position " << blast - 1 << ".\n";
       break;
     }
     minFuel = currentFuel;
@@ -70,13 +71,13 @@ int main(int argc, char **argv) {
 
   const auto minDist =
       findMinimum(positions, [](auto a, auto b) { return std::abs(a - b); });
+  std::cout << "The minimum distance to align horizontally is " << minDist
+            << ".\n";
+
   const auto minFuel = findMinimum(positions, [](auto a, auto b) {
     const auto dist{std::abs(a - b)};
     return dist * (dist + 1) / 2;
   });
-
-  std::cout << "The minimum distance to align horizontally is " << minDist
-            << ".\n";
   std::cout << "The minimum fuel used to align horizontally is " << minFuel
             << ".\n";
 }
