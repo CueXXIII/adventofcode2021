@@ -1,0 +1,50 @@
+Just some simple deduction:
+
+* Count the numbers each segment is used over all 10 numbers.
+
+  In a correctly wired display this would be:
+
+  Sg|Weight
+  --+------
+  a | 8
+  b | 6
+  c | 8
+  d | 7
+  e | 4
+  f | 9
+  g | 7
+
+* Replace every segment id by that number. Since a-g are permutated,
+  the above table will be different for every display. Then sum up
+  all the values. The segment weights might (will) be in a different
+  order.
+
+  D |Segment weights| Sum
+  --+---------------+----
+  0 | 8,6,8,4,9,7   | 42
+  1 | 8,9           | 17
+  2 | 8,8,7,4,7     | 34
+  3 | 8,8,7,9,7     | 39
+  4 | 6,8,7,9       | 30
+  5 | 8,6,7,9,7     | 37
+  6 | 8,6,7,4,9,7   | 41
+  7 | 8,8,9         | 25
+  8 | 8,6,8,7,4,9,7 | 49
+  9 | 8,6,8,7,9,7   | 45
+
+* Since the sum is unique, we can deduce the digit from the sum of
+  the segment weights.
+
+  Sum|Digit
+  ---+-----
+  17 | 1
+  25 | 7
+  30 | 4
+  34 | 2
+  37 | 5
+  39 | 3
+  41 | 6
+  42 | 0
+  45 | 9
+  49 | 8
+
