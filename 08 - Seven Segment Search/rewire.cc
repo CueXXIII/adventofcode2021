@@ -131,7 +131,7 @@ int main(int argc, char **argv) {
       std::accumulate(displays.begin(), displays.end(), 0,
                       [](auto a, auto b) { return a + b.getSimpleDigits(); })};
   std::cout << "The digits 1, 4, 7 and 8 are displayed " << simpleDigits
-            << ".\n";
+            << " times.\n";
 
   const auto valueSums{
       std::accumulate(displays.begin(), displays.end(), 0,
