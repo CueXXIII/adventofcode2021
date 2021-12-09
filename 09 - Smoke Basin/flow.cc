@@ -24,28 +24,13 @@ public:
   uint8_t &at(const Vec2 &pos) { return map[pos.x + pos.y * width]; }
 
 private:
-  bool isVertLow(const size_t x, const size_t y) {
-    return (y == 0 || at(x, y) < at(x, y - 1)) &&
-           (y == height - 1 || at(x, y) < at(x, y + 1));
-  }
-
   void findLowPoints() {
-    for (size_t y = 0; y < height; ++y) {
-      if (at(0, y) < at(1, y)) {
-        if (isVertLow(0, y)) {
-          lowPoints.push_back({0, y});
-        }
-      }
+    for (size_t y = 1; y < height - 1; ++y) {
       for (size_t x = 1; x < width - 1; ++x) {
         if (at(x, y) < at(x - 1, y) && at(x, y) < at(x + 1, y)) {
-          if (isVertLow(x, y)) {
+          if (at(x, y) < at(x, y - 1) && at(x, y) < at(x, y + 1)) {
             lowPoints.push_back({x, y});
           }
-        }
-      }
-      if (at(width - 1, y) < at(width - 2, y)) {
-        if (isVertLow(width - 1, y)) {
-          lowPoints.push_back({width - 1, y});
         }
       }
     }
@@ -61,13 +46,22 @@ public:
     std::string line;
     while (in >> line) {
       if (me.width == 0) {
-        me.width = line.size();
+        me.width = line.size() + 2;
+        for (size_t i = 0; i < me.width; ++i) {
+          me.map.push_back(9);
+        }
       }
       ++me.height;
+      me.map.push_back(9);
       for (const auto cell : line) {
         me.map.push_back(static_cast<uint8_t>(cell - '0'));
       }
+      me.map.push_back(9);
     }
+    for (size_t i = 0; i < me.width; ++i) {
+      me.map.push_back(9);
+    }
+    me.height += 2;
     me.findLowPoints();
     return in;
   }
