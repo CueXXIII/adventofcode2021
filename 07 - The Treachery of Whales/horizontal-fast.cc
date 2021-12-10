@@ -5,6 +5,8 @@
 #include <numeric>
 #include <vector>
 
+#include "median.hpp"
+
 class Positions : public std::vector<int16_t> {
 
 public:
@@ -40,10 +42,7 @@ int main(int argc, char **argv) {
   Positions positions;
   infile >> positions;
 
-  const auto medianPosition{positions.size() / 2};
-  const auto medianIterator{positions.begin() + medianPosition};
-  std::nth_element(positions.begin(), medianIterator, positions.end());
-  const auto minDistPosition{positions.at(medianPosition)};
+  const auto minDistPosition{aoc::median(positions)};
   const auto minDistFuel{positions.fuelConsumption(
       minDistPosition, [](auto a, auto b) { return std::abs(a - b); })};
   std::cout << "Found minimum at position " << minDistPosition << ",\n";

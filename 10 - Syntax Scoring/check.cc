@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+#include "median.hpp"
+
 enum Direction { open, close };
 
 class Bracket {
@@ -114,9 +116,8 @@ int main(int argc, char **argv) {
       ACS.push_back(lineACS);
     }
   }
-  const auto ACSmedian = ACS.begin() + ACS.size() / 2;
-  std::nth_element(ACS.begin(), ACSmedian, ACS.end());
+  const auto ACSmedian = aoc::median(ACS);
 
   std::cout << "This syntax scores " << FIC << " points for FIC.\n";
-  std::cout << "The overall ACS is " << *ACSmedian << " points.\n";
+  std::cout << "The overall ACS is " << ACSmedian << " points.\n";
 }
