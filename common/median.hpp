@@ -4,9 +4,9 @@
 
 namespace aoc {
 
-// if the collection is odd, it returns the lower bound of all medians
+// if the collection is even, it returns the upper bound of all medians
 // since AOC answers are unique, the median range always should contain
-// only one element.
+// only one value.
 auto median(auto &&collection) {
   const auto medianPosition = collection.begin() + collection.size() / 2;
   std::nth_element(collection.begin(), medianPosition, collection.end());
