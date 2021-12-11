@@ -69,4 +69,15 @@ int main(int argc, char **argv) {
   }
   std::cout << "After 100 steps, you have seen " << totalFlashes
             << " flashes\n";
+
+  // TODO: what if the octopuses are synchronized before step 101?
+  size_t stepNo = 100;
+  for (;;) {
+    ++stepNo;
+    if (step(field, width, height) == 100) {
+      std::cout << "In step " << stepNo
+                << " all 100 octopuses flash simultaneously.\n";
+      break;
+    }
+  }
 }
