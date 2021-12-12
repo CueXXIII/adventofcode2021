@@ -96,7 +96,6 @@ private:
     path.addNode(walkFrom);
     uint32_t walkedPaths{0};
     for (const auto nextNode : walkFrom->adjacent) {
-      // TODO allow big nodes
       if (!nextNode->isSmall || path.containsNodeCount(nextNode) == 0) {
         walkedPaths += walkPathRecurse(path, nextNode);
       }
@@ -121,7 +120,6 @@ private:
     path.addNode(walkFrom);
     uint32_t walkedPaths{0};
     for (const auto nextNode : walkFrom->adjacent) {
-      // TODO allow big nodes
       const auto nextNodeCountInPath = path.containsNodeCount(nextNode);
       if (!nextNode->isSmall || nextNodeCountInPath < (visitedTwice ? 1 : 2)) {
         if (nextNode->name != "start") {
@@ -138,6 +136,22 @@ public:
   uint32_t walkPaths2() const {
     Path p;
     return walkPath2Recurse(p, start, false);
+  }
+
+public:
+  void bucketDump () const {
+    // dump std::unordered_map nodeList
+    std::cout << "The graph contains " << nodeList.bucket_count() << " buckets.\n";
+    for(size_t i = 0; i < nodeList.bucket_count(); ++i) {
+      std::cout << "Bucket " << i << ": ";
+      bool first=true;
+      for(auto nodeIter = nodeList.begin(i); nodeIter != nodeList.end(i); ++nodeIter) {
+        if(!first){std::cout<<", ";}
+        std::cout<<(*nodeIter).second->name;
+        first=false;
+      }
+      std::cout<<"\n";
+    }
   }
 };
 
@@ -160,6 +174,8 @@ int main(int argc, char **argv) {
   const auto number = g.walkPaths();
   std::cout << "-------------------------------------------------\n";
   const auto numberTwice = g.walkPaths2();
+  std::cout << "-------------------------------------------------\n";
+  g.bucketDump();
   std::cout << "-------------------------------------------------\n";
 
   std::cout << number << " paths total in part 1\n";
