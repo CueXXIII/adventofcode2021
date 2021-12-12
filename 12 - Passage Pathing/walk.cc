@@ -24,6 +24,7 @@ public:
   Path(Node *start) { nodes.push_back(start); }
 
   void addNode(Node *waypoint) { nodes.push_back(waypoint); }
+  void pop() { nodes.pop_back(); }
 
   uint32_t containsNodeCount(const Node *nodeToFind) const {
     uint32_t count{0};
@@ -87,10 +88,11 @@ public:
   }
 
 private:
-  uint32_t walkPathRecurse(Path path, Node *walkFrom) const {
+  uint32_t walkPathRecurse(Path &path, Node *walkFrom) const {
     if (walkFrom->name == "end") {
       path.addNode(walkFrom);
       path.print();
+      path.pop();
       return 1;
     }
     path.addNode(walkFrom);
@@ -100,6 +102,7 @@ private:
         walkedPaths += walkPathRecurse(path, nextNode);
       }
     }
+    path.pop();
     return walkedPaths;
   }
 
@@ -110,11 +113,12 @@ public:
   }
 
 private:
-  uint32_t walkPath2Recurse(Path path, Node *walkFrom,
+  uint32_t walkPath2Recurse(Path &path, Node *walkFrom,
                             const bool visitedTwice) const {
     if (walkFrom->name == "end") {
       path.addNode(walkFrom);
       path.print();
+      path.pop();
       return 1;
     }
     path.addNode(walkFrom);
@@ -129,6 +133,7 @@ private:
         }
       }
     }
+    path.pop();
     return walkedPaths;
   }
 
@@ -139,18 +144,22 @@ public:
   }
 
 public:
-  void bucketDump () const {
+  void bucketDump() const {
     // dump std::unordered_map nodeList
-    std::cout << "The graph contains " << nodeList.bucket_count() << " buckets.\n";
-    for(size_t i = 0; i < nodeList.bucket_count(); ++i) {
+    std::cout << "The graph contains " << nodeList.bucket_count()
+              << " buckets.\n";
+    for (size_t i = 0; i < nodeList.bucket_count(); ++i) {
       std::cout << "Bucket " << i << ": ";
-      bool first=true;
-      for(auto nodeIter = nodeList.begin(i); nodeIter != nodeList.end(i); ++nodeIter) {
-        if(!first){std::cout<<", ";}
-        std::cout<<(*nodeIter).second->name;
-        first=false;
+      bool first = true;
+      for (auto nodeIter = nodeList.begin(i); nodeIter != nodeList.end(i);
+           ++nodeIter) {
+        if (!first) {
+          std::cout << ", ";
+        }
+        std::cout << (*nodeIter).second->name;
+        first = false;
       }
-      std::cout<<"\n";
+      std::cout << "\n";
     }
   }
 };
