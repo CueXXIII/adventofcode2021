@@ -25,13 +25,14 @@ public:
 
   void addNode(Node *waypoint) { nodes.push_back(waypoint); }
 
-  bool containsNode(const Node *nodeToFind) const {
+  uint32_t containsNodeCount(const Node *nodeToFind) const {
+    uint32_t count{0};
     for (const auto node : nodes) {
       if (node == nodeToFind) {
-        return true;
+        ++count;
       }
     }
-    return false;
+    return count;
   }
 
   void print() const {
@@ -96,7 +97,7 @@ private:
     uint32_t walkedPaths{0};
     for (const auto nextNode : walkFrom->adjacent) {
       // TODO allow big nodes
-      if (!nextNode->isSmall || !path.containsNode(nextNode)) {
+      if (!nextNode->isSmall || path.containsNodeCount(nextNode) == 0) {
         walkedPaths += walkPathRecurse(path, nextNode);
       }
     }
@@ -107,6 +108,36 @@ public:
   uint32_t walkPaths() const {
     Path p;
     return walkPathRecurse(p, start);
+  }
+
+private:
+  uint32_t walkPath2Recurse(Path path, Node *walkFrom,
+                            const bool visitedTwice) const {
+    if (walkFrom->name == "end") {
+      path.addNode(walkFrom);
+      path.print();
+      return 1;
+    }
+    path.addNode(walkFrom);
+    uint32_t walkedPaths{0};
+    for (const auto nextNode : walkFrom->adjacent) {
+      // TODO allow big nodes
+      const auto nextNodeCountInPath = path.containsNodeCount(nextNode);
+      if (!nextNode->isSmall || nextNodeCountInPath < (visitedTwice ? 1 : 2)) {
+        if (nextNode->name != "start") {
+          const bool mayVisitTwice =
+              visitedTwice || (nextNode->isSmall && nextNodeCountInPath == 1);
+          walkedPaths += walkPath2Recurse(path, nextNode, mayVisitTwice);
+        }
+      }
+    }
+    return walkedPaths;
+  }
+
+public:
+  uint32_t walkPaths2() const {
+    Path p;
+    return walkPath2Recurse(p, start, false);
   }
 };
 
@@ -125,6 +156,12 @@ int main(int argc, char **argv) {
     g.addEdge(line.substr(0, seperatorPos), line.substr(seperatorPos + 1));
   }
 
+  std::cout << "-------------------------------------------------\n";
   const auto number = g.walkPaths();
-  std::cout << number << " paths total\n";
+  std::cout << "-------------------------------------------------\n";
+  const auto numberTwice = g.walkPaths2();
+  std::cout << "-------------------------------------------------\n";
+
+  std::cout << number << " paths total in part 1\n";
+  std::cout << numberTwice << " paths total in part 2\n";
 }
