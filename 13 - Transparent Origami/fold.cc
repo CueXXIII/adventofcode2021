@@ -5,55 +5,61 @@
 #include <utility>
 #include <vector>
 
-struct Vec {
-  int x;
-  int y;
+class Paper {
+private:
+  std::set<std::pair<int, int>> coordinates;
+
+public:
+  void dot(const int x, const int y) { coordinates.insert({x, y}); }
+
+  auto countPoints() const { return coordinates.size(); }
+
+  void foldX(auto pos) {
+    std::set<std::pair<int, int>> folded;
+    for (const auto &coord : coordinates) {
+      if (coord.first < pos) {
+        folded.insert(coord);
+      } else {
+        folded.insert({pos * 2 - coord.first, coord.second});
+      }
+    }
+    coordinates = std::move(folded);
+  }
+
+  void foldY(auto pos) {
+    std::set<std::pair<int, int>> folded;
+    for (const auto &coord : coordinates) {
+      if (coord.second < pos) {
+        folded.insert(coord);
+      } else {
+        folded.insert({coord.first, pos * 2 - coord.second});
+      }
+    }
+    coordinates = std::move(folded);
+  }
+
+  friend std::ostream &operator<<(std::ostream &out, const Paper &paper) {
+    auto width{0}, height{0};
+    for (const auto &coord : paper.coordinates) {
+      width = std::max(width, coord.first);
+      height = std::max(height, coord.second);
+    }
+    ++width;
+    ++height;
+    std::vector<bool> bitmap;
+    bitmap.resize(width * height, false);
+    for (const auto &coord : paper.coordinates) {
+      bitmap[coord.first + coord.second * width] = true;
+    }
+    for (auto y = 0; y < height; ++y) {
+      for (auto x = 0; x < width; ++x) {
+        out << (bitmap[x + y * width] ? '#' : ' ');
+      }
+      out << "\n";
+    }
+    return out;
+  }
 };
-
-void foldx(auto &&container, auto pos) {
-  std::set<std::pair<int, int>> newpoints;
-  for (const auto &coord : container) {
-    if (coord.first < pos) {
-      newpoints.insert(coord);
-    } else {
-      newpoints.insert({pos * 2 - coord.first, coord.second});
-    }
-  }
-  container = std::move(newpoints);
-}
-
-void foldy(auto &&container, auto pos) {
-  std::set<std::pair<int, int>> newpoints;
-  for (const auto &coord : container) {
-    if (coord.second < pos) {
-      newpoints.insert(coord);
-    } else {
-      newpoints.insert({coord.first, pos * 2 - coord.second});
-    }
-  }
-  container = std::move(newpoints);
-}
-
-void print(auto &&points) {
-  auto width{0}, height{0};
-  for (const auto &coord : points) {
-    width = std::max(width, coord.first);
-    height = std::max(height, coord.second);
-  }
-  ++width;
-  ++height;
-  std::vector<bool> bitmap;
-  bitmap.resize(width * height, false);
-  for (const auto &coord : points) {
-    bitmap[coord.first + coord.second * width] = true;
-  }
-  for (auto y = 0; y < height; ++y) {
-    for (auto x = 0; x < width; ++x) {
-      std::cout << (bitmap[x + y * width] ? '#' : ' ');
-    }
-    std::cout << "\n";
-  }
-}
 
 int main(int argc, char **argv) {
   if (argc != 2) {
@@ -64,7 +70,7 @@ int main(int argc, char **argv) {
   std::ifstream infile{argv[1]};
   std::string line;
 
-  std::set<std::pair<int, int>> points;
+  Paper paper;
   while (std::getline(infile, line)) {
     const auto delim{line.find(',')};
     if (delim == std::string::npos) {
@@ -72,7 +78,7 @@ int main(int argc, char **argv) {
     }
     const auto xPos{std::stoi(line.substr(0, delim))};
     const auto yPos{std::stoi(line.substr(delim + 1))};
-    points.insert({xPos, yPos});
+    paper.dot(xPos, yPos);
   }
 
   while (std::getline(infile, line)) {
@@ -82,13 +88,13 @@ int main(int argc, char **argv) {
     std::cout << "fold(" << axis << ", " << pos << ") = ";
     switch (axis) {
     case 'x':
-      foldx(points, pos);
+      paper.foldX(pos);
       break;
     case 'y':
-      foldy(points, pos);
+      paper.foldY(pos);
       break;
     }
-    std::cout << points.size() << "\n";
+    std::cout << paper.countPoints() << "\n";
   }
-  print(points);
+  std::cout << paper;
 }
