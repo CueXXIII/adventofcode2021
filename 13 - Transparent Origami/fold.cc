@@ -7,15 +7,15 @@
 
 class Paper {
 private:
-  std::set<std::pair<int, int>> coordinates;
+  std::set<std::pair<long, long>> coordinates;
 
 public:
-  void dot(const int x, const int y) { coordinates.insert({x, y}); }
+  void dot(const long x, const long y) { coordinates.insert({x, y}); }
 
   auto countPoints() const { return coordinates.size(); }
 
   void foldX(auto pos) {
-    std::set<std::pair<int, int>> folded;
+    std::set<std::pair<long, long>> folded;
     for (const auto &coord : coordinates) {
       if (coord.first < pos) {
         folded.insert(coord);
@@ -27,7 +27,7 @@ public:
   }
 
   void foldY(auto pos) {
-    std::set<std::pair<int, int>> folded;
+    std::set<std::pair<long, long>> folded;
     for (const auto &coord : coordinates) {
       if (coord.second < pos) {
         folded.insert(coord);
@@ -39,7 +39,7 @@ public:
   }
 
   friend std::ostream &operator<<(std::ostream &out, const Paper &paper) {
-    auto width{0}, height{0};
+    long width{0}, height{0};
     for (const auto &coord : paper.coordinates) {
       width = std::max(width, coord.first);
       height = std::max(height, coord.second);
@@ -76,15 +76,15 @@ int main(int argc, char **argv) {
     if (delim == std::string::npos) {
       break;
     }
-    const auto xPos{std::stoi(line.substr(0, delim))};
-    const auto yPos{std::stoi(line.substr(delim + 1))};
+    const auto xPos{std::stol(line.substr(0, delim))};
+    const auto yPos{std::stol(line.substr(delim + 1))};
     paper.dot(xPos, yPos);
   }
 
   while (std::getline(infile, line)) {
     const auto delim{line.find('=')};
     const auto axis{line[delim - 1]};
-    const auto pos{std::stoi(line.substr(delim + 1))};
+    const auto pos{std::stol(line.substr(delim + 1))};
     std::cout << "fold(" << axis << ", " << pos << ") = ";
     switch (axis) {
     case 'x':
