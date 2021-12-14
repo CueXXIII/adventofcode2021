@@ -104,4 +104,8 @@ int main(int argc, char **argv) {
     t.step();
   }
   std::cout << t << "\n";
+  for (auto i = size_t{10}; i < 40; ++i) {
+    t.step();
+  }
+  std::cout << t << "\n";
 }
