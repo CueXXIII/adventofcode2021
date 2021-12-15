@@ -27,6 +27,10 @@ template <> struct std::hash<Vec2> {
   }
 };
 
+int64_t manhattenDist(const Vec2 &a, const Vec2 &b) {
+  return std::abs(a.x - b.x) + std::abs(a.y - b.y);
+}
+
 template <typename FieldType> class Map {
   std::vector<FieldType> map;
   const size_t width;
@@ -75,8 +79,10 @@ auto dijkstra(Map<auto> &field, const Vec2 &start, const Vec2 &dest) {
     for (auto current = frontier.begin(); current != frontier.end();
          ++current) {
       const auto currentNode = *current;
-      if (distance[currentNode] < foundMinDist) {
-        foundMinDist = distance[currentNode];
+      const auto currentDist =
+          distance[currentNode] + manhattenDist(currentNode, dest);
+      if (currentDist < foundMinDist) {
+        foundMinDist = currentDist;
         foundEntry = current;
       }
     }
