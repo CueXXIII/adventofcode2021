@@ -11,6 +11,8 @@
 struct Vec2 {
   int64_t x;
   int64_t y;
+  template <typename T, typename S>
+  Vec2(T x, S y) : x(static_cast<int64_t>(x)), y(static_cast<int64_t>(y)) {}
   bool operator==(const Vec2 &other) const {
     return x == other.x && y == other.y;
   }
@@ -120,11 +122,33 @@ int main(int argc, char **argv) {
   std::ifstream infile{argv[1]};
   size_t width;
   size_t height;
-  std::tie(width, height) = aoc::parseDigitField(infile, riskLevel, 255);
+  std::tie(width, height) = aoc::parseDigitField(infile, riskLevel);
   Map map{std::move(riskLevel), width, height};
   const auto shortestPath = dijkstra(
       map, Vec2{1, 1},
       Vec2{static_cast<int64_t>(width - 2), static_cast<int64_t>(height - 2)});
   std::cout << "The least risky path has a total risk level of " << shortestPath
             << ".\n";
+
+  const size_t bigWidth = (width - 2) * 5 + 2;
+  const size_t bigHeight = (height - 2) * 5 + 2;
+  Map<uint8_t> bigMap{bigWidth, bigHeight};
+  for (size_t y = 0; y < bigWidth - 2; ++y) {
+    for (size_t x = 0; x < bigWidth - 2; ++x) {
+      bigMap[{x + 1, y + 1}] = static_cast<uint8_t>(
+          (map[{x % (map.getWidth() - 1) + 1, y % (map.getHeight() - 1) + 1}] +
+           x / (map.getWidth() - 1) + y / (map.getHeight() - 1) - 1) %
+              9 +
+          1);
+      //std::cout << static_cast<int>(bigMap[{x + 1, y + 1}]);
+    }
+    //std::cout << "\n";
+  }
+  const auto shortestBigPath =
+      dijkstra(bigMap, Vec2{1, 1},
+               Vec2{static_cast<int64_t>(bigWidth - 2),
+                    static_cast<int64_t>(bigHeight - 2)});
+  std::cout << "The least risky path through the whole cave has a total risk "
+               "level of "
+            << shortestBigPath << ".\n";
 }
