@@ -93,19 +93,67 @@ public:
       return literal;
     }
     return std::accumulate(
-        operands.begin(), operands.end(), 0,
-        [](auto sum, auto packet) { return sum + packet.literalSum(); });
+        operands.begin(), operands.end(), uint64_t{0},
+        [](auto sum, const auto &packet) { return sum + packet.literalSum(); });
   }
 
   uint64_t versionSum() const {
     if (id == 4) {
       return version;
     }
-    return std::accumulate(operands.begin(), operands.end(), 0,
-                           [](auto sum, auto packet) {
+    return std::accumulate(operands.begin(), operands.end(), uint64_t{0},
+                           [](auto sum, const auto &packet) {
                              return sum + packet.versionSum();
                            }) +
            version;
+  }
+
+  uint64_t decodeValue() const {
+    switch (id) {
+    case 4:
+      return literal;
+      break;
+
+    case 0:
+      return std::accumulate(operands.begin(), operands.end(), uint64_t{0},
+                             [](auto sum, const auto &packet) {
+                               return sum + packet.decodeValue();
+                             });
+      break;
+    case 1:
+      return std::accumulate(operands.begin(), operands.end(), uint64_t{1},
+                             [](auto prod, const auto &packet) {
+                               return prod * packet.decodeValue();
+                             });
+      break;
+    case 2: {
+      auto min = operands[0].decodeValue();
+      for (size_t i = 1; i < operands.size(); ++i) {
+        min = std::min(min, operands[i].decodeValue());
+      }
+      return min;
+    } break;
+    case 3: {
+      auto max = operands[0].decodeValue();
+      for (size_t i = 1; i < operands.size(); ++i) {
+        max = std::max(max, operands[i].decodeValue());
+      }
+      return max;
+    } break;
+    case 5:
+      return static_cast<uint64_t>(operands[0].decodeValue() >
+                                   operands[1].decodeValue());
+      break;
+    case 6:
+      return static_cast<uint64_t>(operands[0].decodeValue() <
+                                   operands[1].decodeValue());
+      break;
+    case 7:
+      return static_cast<uint64_t>(operands[0].decodeValue() ==
+                                   operands[1].decodeValue());
+      break;
+    }
+    throw nullptr;
   }
 };
 
@@ -125,4 +173,6 @@ int main(int argc, char **argv) {
 
   std::cout << "The version sum of the transmission is "
             << transmission.versionSum() << "\n";
+  std::cout << "The transmission has a value of " << transmission.decodeValue()
+            << "\n";
 }
