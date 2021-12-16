@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
 
   const auto averageLow{
       std::accumulate(positions.begin(), positions.end(), int64_t{0}) /
-      positions.size()};
+      static_cast<int64_t>(positions.size())};
   const auto averageHigh{averageLow + 1};
 
   const auto triangleSum{[](auto a, auto b) {

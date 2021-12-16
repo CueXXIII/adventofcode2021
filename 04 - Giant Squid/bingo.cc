@@ -15,9 +15,9 @@ private:
   void mark(size_t position) { drawn[position] = true; }
 
   bool hasBingo() const {
-    for (auto n = 0; n < 5; ++n) {
+    for (size_t n = 0; n < 5; ++n) {
       bool isSet = true;
-      for (auto row = 0; row < 5; ++row) {
+      for (size_t row = 0; row < 5; ++row) {
         if (!isMarked(row + 5 * n)) {
           isSet = false;
         }
@@ -27,7 +27,7 @@ private:
       }
 
       isSet = true;
-      for (auto col = 0; col < 5; ++col) {
+      for (size_t col = 0; col < 5; ++col) {
         if (!isMarked(col * 5 + n)) {
           isSet = false;
         }
@@ -44,7 +44,7 @@ public:
 
   bool ballDrawn(uint8_t ball) {
     if (winningNumber == 255) {
-      for (auto i = 0; i < 25; ++i) {
+      for (size_t i = 0; i < 25; ++i) {
         if (board[i] == ball) {
           mark(i);
         }
@@ -61,7 +61,7 @@ public:
 
   uint32_t winningCode() const {
     uint32_t unmarkedSum = 0;
-    for (auto n = 0; n < 25; ++n) {
+    for (size_t n = 0; n < 25; ++n) {
       if (!isMarked(n)) {
         unmarkedSum += board[n];
       }
@@ -74,7 +74,7 @@ public:
       return infile;
     }
 
-    for (int position = 1; position < 25; ++position) {
+    for (size_t position = 1; position < 25; ++position) {
       if (!(infile >> reinterpret_cast<int &>(board.board[position]))) {
         std::cerr << "premature end of input\n";
         std::exit(EXIT_FAILURE);
@@ -84,8 +84,8 @@ public:
   }
 
   friend std::ostream &operator<<(std::ostream &out, const bingoBoard &board) {
-    for (auto x = 0; x < 5; ++x) {
-      for (auto pos = x; pos < 25; pos += 5) {
+    for (size_t x = 0; x < 5; ++x) {
+      for (size_t pos = x; pos < 25; pos += 5) {
         if (pos > 4) {
           std::cout << " ";
         }

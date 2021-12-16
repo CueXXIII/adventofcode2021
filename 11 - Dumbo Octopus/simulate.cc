@@ -13,18 +13,20 @@ private:
   size_t height;
 
 private:
-  size_t pos(size_t x, size_t y) const { return x + y * width; }
+  size_t pos(auto x, auto y) const {
+    return static_cast<size_t>(x + y * static_cast<decltype(y)>(width));
+  }
 
   size_t substep(auto &&flashing) {
     size_t flashSeen = 0;
-    for (size_t y = 1; y < height - 1; ++y) {
-      for (size_t x = 1; x < width - 1; ++x) {
+    for (auto y = 1; std::cmp_less(y, height - 1); ++y) {
+      for (auto x = 1; std::cmp_less(x, width - 1); ++x) {
         if (!flashing[pos(x, y)] && field[pos(x, y)] > 9) {
           flashSeen += 1;
           flashing[pos(x, y)] = true;
           for (const auto dx : {-1, 0, 1}) {
             for (const auto dy : {-1, 0, 1}) {
-              field[pos(x + dx, y + dy)] += 1;
+              field[pos(x - dx, y - dy)] += 1;
             }
           }
         }

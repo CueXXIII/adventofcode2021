@@ -51,7 +51,7 @@ public:
         std::swap(x1, x2);
         std::swap(y1, y2);
       }
-      for (auto n = 0; std::cmp_less_equal(n, x2 - x1); ++n) {
+      for (size_t n = 0; n <= x2 - x1; ++n) {
         setPixel(x1 + n, y1 + n);
       }
     } else if (x1 + y1 == x2 + y2) {
@@ -60,7 +60,7 @@ public:
         std::swap(x1, x2);
         std::swap(y1, y2);
       }
-      for (auto n = 0; std::cmp_less_equal(n, x2 - x1); ++n) {
+      for (size_t n = 0; n <= x2 - x1; ++n) {
         setPixel(x1 + n, y1 - n);
       }
     }

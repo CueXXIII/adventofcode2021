@@ -30,7 +30,7 @@ constexpr std::array<uint64_t, 9> parseAges(const std::string_view &ages) {
   std::array<uint64_t, 9> lanternfish{0};
   for (auto c : ages) {
     if (c >= '0' && c <= '8') {
-      lanternfish.at(c - '0') += 1;
+      lanternfish.at(static_cast<size_t>(c - '0')) += 1;
     }
   }
   return lanternfish;

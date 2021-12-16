@@ -47,13 +47,13 @@ public:
     ++width;
     ++height;
     std::vector<bool> bitmap;
-    bitmap.resize(width * height, false);
+    bitmap.resize(static_cast<size_t>(width * height), false);
     for (const auto &coord : paper.coordinates) {
-      bitmap[coord.first + coord.second * width] = true;
+      bitmap[static_cast<size_t>(coord.first + coord.second * width)] = true;
     }
     for (auto y = 0; y < height; ++y) {
       for (auto x = 0; x < width; ++x) {
-        out << (bitmap[x + y * width] ? '#' : ' ');
+        out << (bitmap[static_cast<size_t>(x + y * width)] ? '#' : ' ');
       }
       out << "\n";
     }

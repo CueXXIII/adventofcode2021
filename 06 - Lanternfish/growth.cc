@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
 
   for (auto c : ages) {
     if (c >= '0' && c <= '8') {
-      lanternfish.at(c - '0') += 1;
+      lanternfish.at(static_cast<size_t>(c - '0')) += 1;
     }
   }
 

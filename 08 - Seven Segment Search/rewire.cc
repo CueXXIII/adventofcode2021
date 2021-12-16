@@ -42,7 +42,7 @@ private:
   };
 
   int getSegmentWeight(const char segment) const {
-    return segmentWeights[segment - 'a'];
+    return segmentWeights[static_cast<size_t>(segment - 'a')];
   }
 
   int getDigitWeight(const std::string &segments) const {
@@ -63,13 +63,13 @@ public:
 
   friend std::ifstream &operator>>(std::ifstream &in, Display &d) {
     std::string token;
-    for (auto i = 0; i < 10; ++i) {
+    for (size_t i = 0; i < 10; ++i) {
       if (!(in >> token)) {
         return in;
       }
       d.digits[i] = token;
       for (const auto c : token) {
-        ++d.segmentWeights[c - 'a'];
+        ++d.segmentWeights[static_cast<size_t>(c - 'a')];
       }
     }
     if (!(in >> token)) {
@@ -79,7 +79,7 @@ public:
       in.close();
       return in;
     }
-    for (auto i = 0; i < 4; ++i) {
+    for (size_t i = 0; i < 4; ++i) {
       if (!(in >> token)) {
         return in;
       }

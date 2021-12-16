@@ -23,7 +23,7 @@ struct Vec2 {
 
 template <> struct std::hash<Vec2> {
   std::size_t operator()(const Vec2 &v) const noexcept {
-    return std::hash<uint64_t>{}((v.x << 16 | v.x >> 48) ^ v.y);
+    return std::hash<int64_t>{}((v.x << 16 | v.x >> 48) ^ v.y);
   }
 };
 
@@ -45,7 +45,10 @@ public:
 
   size_t getWidth() const { return width - 1; }
   size_t getHeight() const { return height - 1; }
-  auto &operator[](const Vec2 &pos) { return map.at(pos.x + pos.y * width); }
+  auto &operator[](const Vec2 &pos) {
+    return map.at(
+        static_cast<size_t>(pos.x + pos.y * static_cast<int64_t>(width)));
+  }
 
   bool validCoords(const Vec2 &coord) {
     return (coord.x > 0 && std::cmp_less(coord.x, width - 1)) &&

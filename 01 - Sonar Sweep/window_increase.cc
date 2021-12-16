@@ -4,7 +4,7 @@
 #include <iostream>
 #include <numeric>
 
-template <int winsize> class slidingWindow {
+template <unsigned int winsize> class slidingWindow {
 private:
   std::array<int, winsize> data{};
   size_t position = 0;

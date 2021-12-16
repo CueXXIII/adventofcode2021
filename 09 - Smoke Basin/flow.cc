@@ -77,12 +77,12 @@ private:
 
 public:
   size_t totalRiskLevel() {
-    return std::accumulate(lowPoints.begin(), lowPoints.end(), 0,
+    return std::accumulate(lowPoints.begin(), lowPoints.end(), size_t{0},
                            [this](auto a, auto b) { return a + 1 + at(b); });
   }
 
   size_t largeBasinSizes() const {
-    return std::accumulate(basinSizes.end() - 3, basinSizes.end(), 1,
+    return std::accumulate(basinSizes.end() - 3, basinSizes.end(), size_t{1},
                            [](auto a, auto b) { return a * b; });
   }
 
