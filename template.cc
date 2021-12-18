@@ -1,6 +1,4 @@
-#include <cstdlib>
-#include <fstream>
-#include <iostream>
+#include "all.hpp"
 
 int main(int argc, char **argv) {
   if (argc != 2) {
