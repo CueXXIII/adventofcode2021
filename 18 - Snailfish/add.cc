@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <list>
+#include <vector>
 
 struct SnailDigit {
   int depth;
@@ -146,12 +147,28 @@ int main(int argc, char **argv) {
 
   std::ifstream infile{argv[1]};
   std::string line;
+  std::vector<std::string> homework;
   infile >> line;
+  homework.push_back(line);
   SnailNumber sum{line};
   while (infile >> line) {
+    homework.push_back(line);
     SnailNumber second{line};
     std::cout << "  " << sum << "\n+ " << second << "\n= ";
     sum.add(second);
     std::cout << sum << " magnitude " << sum.magnitude() << "\n\n";
   }
+
+  int maxMagnitude = 0;
+  for (size_t i = 0; i < homework.size(); ++i) {
+    for (size_t j = 0; j < homework.size(); ++j) {
+      if (i != j) {
+        SnailNumber first{homework[i]};
+        SnailNumber second{homework[j]};
+        first.add(second);
+        maxMagnitude = std::max(maxMagnitude, first.magnitude());
+      }
+    }
+  }
+  std::cout << "The largest magnitude is " << maxMagnitude << "\n";
 }
