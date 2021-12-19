@@ -25,6 +25,11 @@ struct Vec3 {
     return (x == other.x) && (y == other.y) && (z == other.z);
   }
 
+  int64_t manhattan(const Vec3 &other) const {
+    return std::abs(x - other.x) + std::abs(y - other.y) +
+           std::abs(z - other.z);
+  }
+
   const std::string toString() const {
     std::ostringstream out;
     out << fmt::format("{:d},{:d},{:d}", x, y, z);
@@ -253,4 +258,12 @@ int main(int argc, char **argv) {
     }
   }
   std::cout << "There are " << beacons.size() << " beacons\n";
+
+  int64_t maxDist = 0;
+  for (const auto &s1 : placedScanners) {
+    for (const auto &s2 : placedScanners) {
+      maxDist = std::max(maxDist, s1.translation.manhattan(s2.translation));
+    }
+  }
+  std::cout << "Manhattan ist " << maxDist << " furlong vom Ozean entfernt\n";
 }
