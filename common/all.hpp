@@ -58,6 +58,7 @@
 #include <cwchar>
 #include <cwctype>
 // clude <format>             // c++20
+#include <fmt/format.h>       // replacement for gcc/clang
 #include <string>
 #include <string_view>        // c++17
 
@@ -94,7 +95,7 @@
 #include <numeric>
 #include <random>             // c++11
 #include <ratio>              // c++11
-#include <valarray>
+// clude <valarray>         // clang?
 
 // Localization library
 #include <clocale>

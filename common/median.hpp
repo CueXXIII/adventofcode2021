@@ -10,9 +10,8 @@ namespace aoc {
 auto median(auto &&collection) {
   const auto medianPosition =
       collection.begin() +
-      static_cast<
-          std::remove_reference<decltype(collection)>::type::difference_type>(
-          collection.size()) /
+      static_cast<typename std::remove_reference<
+          decltype(collection)>::type::difference_type>(collection.size()) /
           2;
   std::nth_element(collection.begin(), medianPosition, collection.end());
   return *medianPosition;
