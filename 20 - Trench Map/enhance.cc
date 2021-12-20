@@ -117,4 +117,9 @@ int main(int argc, char **argv) {
   image.step(rules);
   std::cout << fmt::format("After  2 steps there {:d} pixel\n",
                            image.countPixels());
+  for (int i = 3; i <= 50; ++i) {
+    image.step(rules);
+    std::cout << fmt::format("After {:2d} steps there {:d} pixel\n", i,
+                             image.countPixels());
+  }
 }
