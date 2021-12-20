@@ -166,6 +166,7 @@ public:
   }
 };
 
+// ------------------------------
 Vec3 mapCoordinate(const Vec3 &pos, const size_t rot, const Vec3 &transl) {
   return rotationMatrices[rot] * pos + transl;
 }
