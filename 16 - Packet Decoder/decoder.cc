@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <numeric>
+#include <ranges>
 #include <vector>
 
 std::vector<bool> hex2bin(const std::string_view &hexStream) {
@@ -12,7 +13,8 @@ std::vector<bool> hex2bin(const std::string_view &hexStream) {
     } else {
       nibble -= 'A' - 10;
     }
-    for ([[maybe_unused]] auto i : {0, 0, 0, 0}) {
+    for ([[maybe_unused]] const auto n :
+         std::views::iota(0) | std::views::take(4)) {
       binStream.push_back((nibble & 0x8) >> 3);
       nibble <<= 1;
     }
@@ -23,7 +25,7 @@ std::vector<bool> hex2bin(const std::string_view &hexStream) {
 constexpr uint16_t parseUInt(const std::vector<bool> &stream,
                              const size_t cursor, const size_t size) {
   uint16_t value{0};
-  for (auto pos = cursor; pos < cursor + size; ++pos) {
+  for (const auto pos : std::views::iota(cursor, cursor + size)) {
     value <<= 1;
     value |= static_cast<uint16_t>(stream[pos]);
   }
@@ -79,7 +81,8 @@ public:
         const auto subPackets{parseUInt(stream, cursor + 7, 11)};
         std::cout << " with " << subPackets << " sub-packets\n";
         size_t pos{0};
-        for (size_t n = 0; n < subPackets; ++n) {
+        for ([[maybe_unused]] const auto n :
+             std::views::iota(0) | std::views::take(subPackets)) {
           operands.push_back(Packet{stream, cursor + 18 + pos});
           pos += operands.back().length;
         }
@@ -110,10 +113,11 @@ public:
 
   uint64_t decodeValue() const {
     switch (id) {
+      break;
     case 4:
       return literal;
-      break;
 
+      break;
     case 0:
       return std::accumulate(operands.begin(), operands.end(), uint64_t{0},
                              [](auto sum, const auto &packet) {
@@ -128,14 +132,14 @@ public:
       break;
     case 2: {
       auto min = operands[0].decodeValue();
-      for (size_t i = 1; i < operands.size(); ++i) {
+      for (const size_t i : std::views::iota(size_t{1}, operands.size())) {
         min = std::min(min, operands[i].decodeValue());
       }
       return min;
     } break;
     case 3: {
       auto max = operands[0].decodeValue();
-      for (size_t i = 1; i < operands.size(); ++i) {
+      for (const size_t i : std::views::iota(size_t{1}, operands.size())) {
         max = std::max(max, operands[i].decodeValue());
       }
       return max;
@@ -151,7 +155,6 @@ public:
     case 7:
       return static_cast<uint64_t>(operands[0].decodeValue() ==
                                    operands[1].decodeValue());
-      break;
     }
     throw nullptr;
   }
@@ -163,16 +166,23 @@ int main(int argc, char **argv) {
     std::exit(EXIT_FAILURE);
   }
 
-  auto stream{hex2bin(argv[1])};
+  std::ifstream in{argv[1]};
+  std::string line;
+  while (std::getline(in, line)) {
+    if (line.size() == 0) {
+      continue;
+    }
+    auto stream{hex2bin(line)};
 
-  for (const auto b : stream) {
-    std::cout << b;
+    for (const auto b : stream) {
+      std::cout << b;
+    }
+    std::cout << "\n";
+    Packet transmission{stream, 0};
+
+    std::cout << "The version sum of the transmission is "
+              << transmission.versionSum() << "\n";
+    std::cout << "The transmission has a value of "
+              << transmission.decodeValue() << "\n\n";
   }
-  std::cout << "\n";
-  Packet transmission{stream, 0};
-
-  std::cout << "The version sum of the transmission is "
-            << transmission.versionSum() << "\n";
-  std::cout << "The transmission has a value of " << transmission.decodeValue()
-            << "\n";
 }
