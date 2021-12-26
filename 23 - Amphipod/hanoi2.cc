@@ -3,9 +3,13 @@
 // Burrow positions
 // 0 -- 1 -- 2 -- 3 -- 4 -- 5 -- 6 -- 7 -- 8 -- 9 -- 10
 //           |         |         |         |
-//          11        13        15        17
+//          11        15        19        23
 //           |         |         |         |
-//          12        14        16        18
+//          12        16        20        24
+//           |         |         |         |
+//          13        17        21        25
+//           |         |         |         |
+//          14        18        22        26
 
 struct Path {
   std::vector<size_t> vertices{};
@@ -30,68 +34,72 @@ static std::vector<Path> paths;
 
 Path findPath(size_t src, const size_t dst) {
   Path path{};
-  path.vertices.push_back(src);
+  path.cost = -1;
   if (src == dst) {
+    path.vertices.push_back(src);
+    ++path.cost;
     return path;
   }
-  if (src > 10 && dst > 10 && ((src + 1) | 1) == ((dst + 1) | 1)) {
+  if (src > 10 && dst > 10 && ((src + 1) | 3) == ((dst + 1) | 3)) {
+    // this path is invalid
     path.vertices = {src, dst};
-    path.cost = 1;
+    path.cost = 99;
     return path;
   }
   if (src > 10) {
-    if ((src & 1) == 0) {
-      src -= 1;
+    while ((src & 3) != 3) {
       path.vertices.push_back(src);
       ++path.cost;
+      --src;
     }
-    src -= 9;
+    path.vertices.push_back(src);
     ++path.cost;
+    src = src / 2 - 3;
     Path section = findPath(src, dst);
     for (const auto v : section.vertices) {
       path.vertices.push_back(v);
     }
-    path.cost += section.cost;
+    path.cost += section.cost + 1;
     return path;
   }
   if (dst > 10) {
-    const size_t wayp = ((dst - 1) | 1) - 9;
+    const size_t wayp = ((dst + 1) | 3) / 2 - 5;
     path = findPath(src, wayp);
-    if ((dst & 1) == 0) {
-      path.vertices.push_back(dst - 1);
+    src = wayp * 2 + 7;
+    while (src <= dst) {
+      path.vertices.push_back(src);
       ++path.cost;
+      ++src;
     }
-    path.vertices.push_back(dst);
-    ++path.cost;
     return path;
   }
   if (src < dst) {
-    for (size_t n = src + 1; n <= dst; ++n) {
+    for (size_t n = src; n <= dst; ++n) {
       path.vertices.push_back(n);
       ++path.cost;
     }
     return path;
   }
   // src>dst
-  for (int n = static_cast<int>(src) - 1; std::cmp_greater_equal(n, dst); --n) {
-    path.vertices.push_back(static_cast<size_t>(n));
+  for (size_t n = src + 1; n-- > dst;) {
+    path.vertices.push_back(n);
     ++path.cost;
   }
   return path;
 }
 
 void calculateAllPaths() {
-  paths.resize(19 * 19);
-  for (const auto src :
-       {0, 1, 3, 5, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18}) {
-    for (const auto dst :
-         {0, 1, 3, 5, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18}) {
+  paths.resize(27 * 27);
+  for (const auto src : {0,  1,  3,  5,  7,  9,  10, 11, 12, 13, 14, 15,
+                         16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26}) {
+    for (const auto dst : {0,  1,  3,  5,  7,  9,  10, 11, 12, 13, 14, 15,
+                           16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26}) {
       if (src == dst) {
         continue;
       }
       const auto &path =
           findPath(static_cast<size_t>(src), static_cast<size_t>(dst));
-      paths[static_cast<size_t>(src + dst * 19)] = path;
+      paths[static_cast<size_t>(src + dst * 27)] = path;
     }
   }
 }
@@ -105,8 +113,8 @@ struct Pod {
 static const std::array<int, 4> podMoveCost{1, 10, 100, 1000};
 
 class Burrow {
-  std::array<Pod, 8> pods;
-  std::array<Pod *, 19> burrow;
+  std::array<Pod, 16> pods;
+  std::array<Pod *, 27> burrow;
 
 private:
   void updateBurrow() {
@@ -121,16 +129,10 @@ public:
     pods.fill({'.', 0});
     updateBurrow();
   }
-  // copy constructor
-  Burrow(const Burrow &other) {
-    pods = other.pods;
-    updateBurrow();
-  }
-  Burrow &operator=(const Burrow &other) {
-    pods = other.pods;
-    updateBurrow();
-    return *this;
-  }
+  Burrow(const Burrow &) = delete;
+  Burrow &operator=(const Burrow &) = delete;
+  Burrow(Burrow &&) = delete;
+  Burrow &operator=(Burrow &&) = delete;
   ~Burrow() = default;
 
   // does not check if path is valid and move allowed by rules
@@ -146,13 +148,15 @@ public:
   }
 
   bool podIsHome(const Pod &pod) const {
-    const size_t podHome = static_cast<size_t>((pod.type - 'A') * 2 + 11);
-    if (pod.pos == podHome + 1) {
-      return true;
-    }
-    if (pod.pos == podHome && burrow[podHome + 1] &&
-        burrow[podHome + 1]->type == pod.type) {
-      return true;
+    const size_t podBase = static_cast<size_t>((pod.type - 'A') * 4 + 14);
+    for (const auto d : std::views::iota(size_t{0}, size_t{4})) {
+      if (pod.pos == podBase - d) {
+        return true;
+      }
+      if (burrow[podBase - d] == nullptr ||
+          burrow[podBase - d]->type != pod.type) {
+        return false;
+      }
     }
     return false;
   }
@@ -177,16 +181,10 @@ public:
     }
     // only move to own home and don't block others
     if (dst > 10) {
-      const size_t podHome = static_cast<size_t>((pod.type - 'A') * 2 + 11);
-      if (dst != podHome && dst != podHome + 1) {
-        return false;
-      }
-      if (dst == podHome && !burrow[podHome + 1]) {
-        return false;
-      }
-      if (dst == podHome && burrow[podHome + 1] &&
-          burrow[podHome + 1]->type != pod.type) {
-        return false;
+      const size_t podBase = static_cast<size_t>((pod.type - 'A') * 4 + 14);
+      if(dst<podBase-3 || dst>podBase) { return false;}
+      for(const auto pos:std::views::iota(dst+1,podBase+1)) {
+        if(burrow[pos] == nullptr||burrow[pos]->type!=pod.type) { return false;}
       }
     }
     // and stay at home
@@ -199,7 +197,7 @@ public:
     }
 
     // destination is allowed, now check if the path is clear
-    const auto checkPath = paths[pod.pos + dst * 19].vertices;
+    const auto checkPath = paths[pod.pos + dst * 27].vertices;
     for (auto vert = checkPath.begin() + 1; vert < checkPath.end(); ++vert) {
       if (burrow[*vert] != nullptr) {
         return false;
@@ -239,14 +237,14 @@ public:
     }
     std::vector<Path> possiblePaths{};
     for (const auto pod : pods) {
-      for (const auto dstRev : std::views::iota(size_t{0}, size_t{19})) {
-        const auto dst = 18 - dstRev;
-        if (podCanMoveTo(pod, dst)) {
-          const auto &path = paths[pod.pos + dst * 19];
+      for (const auto dstRev : std::views::iota(size_t{0}, size_t{27})) {
+        const auto dst = 26 - dstRev;
+        const auto &path = paths[pod.pos + dst * 27];
+        if (path.cost < 99 && podCanMoveTo(pod, dst)) {
           possiblePaths.push_back(path);
           possiblePaths.back().cost *=
               podMoveCost[static_cast<size_t>(pod.type - 'A')];
-          // don't add more paths if this pod can move back
+          // don't add more paths if this pod can move home
           if (dst > 10) {
             break;
           }
@@ -256,6 +254,21 @@ public:
 
     std::sort(possiblePaths.begin(), possiblePaths.end(),
               [](const auto &a, const auto &b) { return a.cost < b.cost; });
+
+    if (depth > 64) {
+      std::cout << "Depth exceeds 64!?\n";
+      for (const auto &p : possiblePaths) {
+        std::cout << p << '\n';
+      }
+      std::cout << *this;
+      printSolution(solution);
+      throw nullptr;
+      std::exit(EXIT_FAILURE);
+    }
+    // for(const auto &p : possiblePaths) {
+    //   std::cout<<p<<'\n';
+    // }
+    // std::cout<<"----------------------------------------\n";
 
     // DFS on all remaining paths sorted by depth
     for (const auto &p : possiblePaths) {
@@ -274,17 +287,29 @@ public:
     std::getline(in, line);
     std::getline(in, line);
     burrow.pods[0] = {.type = line[3], .pos = 11};
-    burrow.pods[1] = {.type = line[5], .pos = 13};
-    burrow.pods[2] = {.type = line[7], .pos = 15};
-    burrow.pods[3] = {.type = line[9], .pos = 17};
+    burrow.pods[1] = {.type = line[5], .pos = 15};
+    burrow.pods[2] = {.type = line[7], .pos = 19};
+    burrow.pods[3] = {.type = line[9], .pos = 23};
 
     std::getline(in, line);
-    burrow.pods[4] = {.type = line[3], .pos = 12};
-    burrow.pods[5] = {.type = line[5], .pos = 14};
-    burrow.pods[6] = {.type = line[7], .pos = 16};
-    burrow.pods[7] = {.type = line[9], .pos = 18};
+    burrow.pods[4] = {.type = line[3], .pos = 14};
+    burrow.pods[5] = {.type = line[5], .pos = 18};
+    burrow.pods[6] = {.type = line[7], .pos = 22};
+    burrow.pods[7] = {.type = line[9], .pos = 26};
 
     std::getline(in, line);
+
+    // folded positions
+    burrow.pods[8] = {.type = 'D', .pos = 12};
+    burrow.pods[9] = {.type = 'C', .pos = 16};
+    burrow.pods[10] = {.type = 'B', .pos = 20};
+    burrow.pods[11] = {.type = 'A', .pos = 24};
+
+    burrow.pods[12] = {.type = 'D', .pos = 13};
+    burrow.pods[13] = {.type = 'B', .pos = 17};
+    burrow.pods[14] = {.type = 'A', .pos = 21};
+    burrow.pods[15] = {.type = 'C', .pos = 25};
+
     burrow.updateBurrow();
     return in;
   }
@@ -303,9 +328,13 @@ public:
       out << b(p);
     }
     out << "#\n";
-    out << "###" << b(11) << '#' << b(13) << '#' << b(15) << '#' << b(17)
+    out << "###" << b(11) << '#' << b(15) << '#' << b(19) << '#' << b(23)
         << "###\n";
-    out << "  #" << b(12) << '#' << b(14) << '#' << b(16) << '#' << b(18)
+    out << "  #" << b(12) << '#' << b(16) << '#' << b(20) << '#' << b(24)
+        << "#\n";
+    out << "  #" << b(13) << '#' << b(17) << '#' << b(21) << '#' << b(25)
+        << "#\n";
+    out << "  #" << b(14) << '#' << b(18) << '#' << b(22) << '#' << b(26)
         << "#\n";
     out << "  #########\n\n";
     return out;
