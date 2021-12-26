@@ -255,21 +255,6 @@ public:
     std::sort(possiblePaths.begin(), possiblePaths.end(),
               [](const auto &a, const auto &b) { return a.cost < b.cost; });
 
-    if (depth > 64) {
-      std::cout << "Depth exceeds 64!?\n";
-      for (const auto &p : possiblePaths) {
-        std::cout << p << '\n';
-      }
-      std::cout << *this;
-      printSolution(solution);
-      throw nullptr;
-      std::exit(EXIT_FAILURE);
-    }
-    // for(const auto &p : possiblePaths) {
-    //   std::cout<<p<<'\n';
-    // }
-    // std::cout<<"----------------------------------------\n";
-
     // DFS on all remaining paths sorted by depth
     for (const auto &p : possiblePaths) {
       movePod(p.vertices.front(), p.vertices.back());
