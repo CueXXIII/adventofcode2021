@@ -236,8 +236,14 @@ public:
 
     // Do we have any pieces that can move home? Move them immediately.
     int64_t immediateCost = 0;
-    for (const auto &p : possiblePaths) {
+    for (auto &p : possiblePaths) {
       if (p.vertices.back() <= 10) {
+        continue;
+      }
+      // but don't move 2 of the same home
+      if (burrow[p.vertices.back()] != nullptr) {
+        // invalidate this path, so it won't get rolled back later
+        p.vertices.front() = failed;
         continue;
       }
       movePod(p.vertices.front(), p.vertices.back());
@@ -271,6 +277,9 @@ public:
     // Roll back immediate moves
     for (const auto &p : possiblePaths) {
       if (p.vertices.back() <= 10) {
+        continue;
+      }
+      if (p.vertices.front() == failed) {
         continue;
       }
       movePod(p.vertices.back(), p.vertices.front());
