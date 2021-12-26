@@ -137,6 +137,7 @@ public:
   // use podCanMoveTo() for that
   void movePod(size_t src, size_t dst) {
     if (burrow[src] == nullptr || burrow[dst] != nullptr) {
+      std::cout << "Illegal move! " << src << " -> " << dst << "\n";
       return;
     }
     burrow[src]->pos = dst;
@@ -208,12 +209,39 @@ public:
     return true;
   }
 
-  int64_t costToHome(const int depth = 0) {
-    const auto failed = std::numeric_limits<int64_t>::max() / 3;
+  void printSolution(const std::vector<Path> &solution) const {
+    return;
+    int64_t totalCost = 0;
+    std::cout << "Possible solution:\n";
+    for (const auto &p : solution) {
+      std::cout << "  (" << p.vertices.front() << ")->(" << p.vertices.back()
+                << ") for " << p.cost << "\n";
+      totalCost += p.cost;
+    }
+    std::cout << "  totalCost = " << totalCost << " jelly beans\n";
+  }
+
+  int64_t costToHomeMin;
+  int64_t costToHome(const int depth = 0, const int64_t currentCost = 0,
+                     std::vector<Path> solution = {}) {
+    const auto infinity = std::numeric_limits<int64_t>::max() / 3;
+    if (depth == 0) {
+      costToHomeMin = infinity;
+    }
+    if (depth == 1) {
+      std::cout << depth << std::flush;
+    }
+    if (currentCost > costToHomeMin) {
+      return infinity;
+    }
     if (podsAreAllHome()) {
+      if (currentCost < costToHomeMin) {
+        costToHomeMin = currentCost;
+        printSolution(solution);
+      }
       return 0; // this was cheap
     }
-    int64_t minimumPathCost = failed;
+    int64_t minimumPathCost = infinity;
     std::vector<Path> possiblePaths{};
     for (const auto pod : pods) {
       for (const auto dst : std::views::iota(size_t{0}, size_t{19})) {
@@ -228,65 +256,77 @@ public:
 
     // no paths left? backtrack
     if (possiblePaths.size() == 0) {
-      return failed;
+      return infinity;
     }
 
+    if (depth == 0) {
+      for ([[maybe_unused]] const auto i :
+           std::views::iota(size_t{0}, possiblePaths.size())) {
+        std::cout << "_";
+      }
+      std::cout << "\n";
+    }
     std::sort(possiblePaths.begin(), possiblePaths.end(),
               [](const auto &a, const auto &b) { return a.cost < b.cost; });
 
     // Do we have any pieces that can move home? Move them immediately.
     int64_t immediateCost = 0;
-    for (auto &p : possiblePaths) {
+    /*for (auto &p : possiblePaths) {
       if (p.vertices.back() <= 10) {
         continue;
       }
       // but don't move 2 of the same home
       if (burrow[p.vertices.back()] != nullptr) {
         // invalidate this path, so it won't get rolled back later
-        p.vertices.front() = failed;
+        p.vertices.front() = infinity;
         continue;
       }
       movePod(p.vertices.front(), p.vertices.back());
+      solution.push_back(p);
       immediateCost += p.cost;
-    }
+    }*/
 
     // DFS on all remaining paths sorted by depth
     bool foundPath = false;
     for (const auto &p : possiblePaths) {
+      /*
       if (p.vertices.back() > 10) {
         continue;
       }
       // this piece was moved home
       if (burrow[p.vertices.front()] == nullptr) {
         continue;
-      }
+      } */
       foundPath = true;
       movePod(p.vertices.front(), p.vertices.back());
-      const auto result = costToHome(depth + 1);
-      if (result < failed) {
+      solution.push_back(p);
+      const auto result = costToHome(depth + 1, currentCost + p.cost, solution);
+      if (result < infinity) {
         minimumPathCost = std::min(minimumPathCost, p.cost + result);
       }
       movePod(p.vertices.back(), p.vertices.front());
+      solution.pop_back();
     }
     // no paths remaining? Maybe the immediate moves freed up some
     // paths, or we are already home. Recurse to find out.
     if (!foundPath) {
-      minimumPathCost = costToHome(depth + 1);
+      minimumPathCost = costToHome(depth + 1, currentCost, solution);
     }
 
     // Roll back immediate moves
-    for (const auto &p : possiblePaths) {
+    /*for (const auto &p : possiblePaths) {
       if (p.vertices.back() <= 10) {
         continue;
       }
-      if (p.vertices.front() == failed) {
+      if (p.vertices.front() == infinity) {
         continue;
       }
       movePod(p.vertices.back(), p.vertices.front());
-    }
+      solution.pop_back();
+    }*/
 
-    return (minimumPathCost >= failed) ? failed
-                                       : minimumPathCost + immediateCost;
+    return (minimumPathCost >= infinity) ? infinity
+                                         : minimumPathCost + immediateCost;
   }
 
   friend std::ifstream &operator>>(std::ifstream &in, Burrow &burrow) {
@@ -349,5 +389,5 @@ int main(int argc, char **argv) {
   std::cout << burrow;
 
   const auto c = burrow.costToHome();
-  std::cout << "Returning home cost " << c << " jelly beans.\n";
+  std::cout << "\nReturning home cost " << c << " jelly beans.\n";
 }
