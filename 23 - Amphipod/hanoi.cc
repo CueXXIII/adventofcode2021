@@ -105,12 +105,10 @@ struct Pod {
 static const std::array<int, 4> podMoveCost{1, 10, 100, 1000};
 
 class Burrow {
-public: // debug
   std::array<Pod, 8> pods;
   std::array<Pod *, 19> burrow;
 
 private:
-public: // debug
   void updateBurrow() {
     burrow.fill(nullptr);
     for (auto &pod : pods) {
@@ -134,6 +132,17 @@ public:
     return *this;
   }
   ~Burrow() = default;
+
+  // does not check if path is valid and move allowed by rules
+  // use podCanMoveTo() for that
+  void movePod(size_t src, size_t dst) {
+    if (burrow[src] == nullptr || burrow[dst] != nullptr) {
+      return;
+    }
+    burrow[src]->pos = dst;
+    burrow[dst] = burrow[src];
+    burrow[src] = nullptr;
+  }
 
   bool podIsHome(const Pod &pod) const {
     const size_t podHome = static_cast<size_t>((pod.type - 'A') * 2 + 11);
@@ -199,18 +208,76 @@ public:
     return true;
   }
 
-  void printPossiblePaths() {
+  int64_t costToHome(const int depth = 0) {
+    const auto failed = std::numeric_limits<int64_t>::max() / 3;
+    if (podsAreAllHome()) {
+      return 0; // this was cheap
+    }
+    int64_t minimumPathCost = failed;
+    std::vector<Path> possiblePaths{};
     for (const auto pod : pods) {
       for (const auto dst : std::views::iota(size_t{0}, size_t{19})) {
         if (podCanMoveTo(pod, dst)) {
           const auto &path = paths[pod.pos + dst * 19];
-          std::cout << path << ", totalCost = ";
-          const auto totalCost =
-              path.cost * podMoveCost[static_cast<size_t>(pod.type - 'A')];
-          std::cout << totalCost << "\n";
+          possiblePaths.push_back(path);
+          possiblePaths.back().cost *=
+              podMoveCost[static_cast<size_t>(pod.type - 'A')];
         }
       }
     }
+
+    // no paths left? backtrack
+    if (possiblePaths.size() == 0) {
+      return failed;
+    }
+
+    std::sort(possiblePaths.begin(), possiblePaths.end(),
+              [](const auto &a, const auto &b) { return a.cost < b.cost; });
+
+    // Do we have any pieces that can move home? Move them immediately.
+    int64_t immediateCost = 0;
+    for (const auto &p : possiblePaths) {
+      if (p.vertices.back() <= 10) {
+        continue;
+      }
+      movePod(p.vertices.front(), p.vertices.back());
+      immediateCost += p.cost;
+    }
+
+    // DFS on all remaining paths sorted by depth
+    bool foundPath = false;
+    for (const auto &p : possiblePaths) {
+      if (p.vertices.back() > 10) {
+        continue;
+      }
+      // this piece was moved home
+      if (burrow[p.vertices.front()] == nullptr) {
+        continue;
+      }
+      foundPath = true;
+      movePod(p.vertices.front(), p.vertices.back());
+      const auto result = costToHome(depth + 1);
+      if (result < failed) {
+        minimumPathCost = std::min(minimumPathCost, p.cost + result);
+      }
+      movePod(p.vertices.back(), p.vertices.front());
+    }
+    // no paths remaining? Maybe the immediate moves freed up some
+    // paths, or we are already home. Recurse to find out.
+    if (!foundPath) {
+      minimumPathCost = costToHome(depth + 1);
+    }
+
+    // Roll back immediate moves
+    for (const auto &p : possiblePaths) {
+      if (p.vertices.back() <= 10) {
+        continue;
+      }
+      movePod(p.vertices.back(), p.vertices.front());
+    }
+
+    return (minimumPathCost >= failed) ? failed
+                                       : minimumPathCost + immediateCost;
   }
 
   friend std::ifstream &operator>>(std::ifstream &in, Burrow &burrow) {
@@ -267,16 +334,11 @@ int main(int argc, char **argv) {
   calculateAllPaths();
 
   Burrow burrow{};
-  std::cout << burrow;
 
   std::ifstream infile{argv[1]};
   infile >> burrow;
   std::cout << burrow;
-  burrow.printPossiblePaths();
 
-  burrow.pods[1].pos = 0;
-  burrow.pods[5].pos = 3;
-  burrow.updateBurrow();
-  std::cout << burrow;
-  burrow.printPossiblePaths();
+  const auto c = burrow.costToHome();
+  std::cout << "Returning home cost " << c << " jelly beans.\n";
 }
