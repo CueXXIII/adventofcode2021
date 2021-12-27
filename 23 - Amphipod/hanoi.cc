@@ -221,8 +221,9 @@ public:
   }
 
   int64_t costToHomeMin;
-  void costToHome(const int depth = 0, const int64_t currentCost = 0,
-                  std::vector<Path> solution = {}) {
+  void costToHome(
+      const int depth = 0, const int64_t currentCost = 0,
+      std::vector<Path> &solution = *std::make_shared<std::vector<Path>>()) {
     const auto infinity = std::numeric_limits<int64_t>::max() / 3;
     if (depth == 0) {
       costToHomeMin = infinity;

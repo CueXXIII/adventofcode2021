@@ -182,9 +182,13 @@ public:
     // only move to own home and don't block others
     if (dst > 10) {
       const size_t podBase = static_cast<size_t>((pod.type - 'A') * 4 + 14);
-      if(dst<podBase-3 || dst>podBase) { return false;}
-      for(const auto pos:std::views::iota(dst+1,podBase+1)) {
-        if(burrow[pos] == nullptr||burrow[pos]->type!=pod.type) { return false;}
+      if (dst < podBase - 3 || dst > podBase) {
+        return false;
+      }
+      for (const auto pos : std::views::iota(dst + 1, podBase + 1)) {
+        if (burrow[pos] == nullptr || burrow[pos]->type != pod.type) {
+          return false;
+        }
       }
     }
     // and stay at home
@@ -219,8 +223,9 @@ public:
   }
 
   int64_t costToHomeMin;
-  void costToHome(const int depth = 0, const int64_t currentCost = 0,
-                  std::vector<Path> solution = {}) {
+  void costToHome(
+      const int depth = 0, const int64_t currentCost = 0,
+      std::vector<Path> &solution = *std::make_shared<std::vector<Path>>()) {
     const auto infinity = std::numeric_limits<int64_t>::max() / 3;
     if (depth == 0) {
       costToHomeMin = infinity;
