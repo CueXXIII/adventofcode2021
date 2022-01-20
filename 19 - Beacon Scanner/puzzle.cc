@@ -1,8 +1,10 @@
+#include <algorithm>
 #include <array>
 #include <deque>
 #include <fmt/format.h>
 #include <fstream>
 #include <iostream>
+#include <ranges>
 #include <sstream>
 #include <unordered_set>
 #include <vector>
@@ -107,18 +109,19 @@ const std::vector<Mat3x3> rotationMatrices{[]() {
   std::unordered_set<Mat3x3> uniqueRotations;
 
   Mat3x3 first{1, 0, 0, 0, 1, 0, 0, 0, 1};
-  for ([[maybe_unused]] const auto x : {1, 2, 3, 4}) {
+  std::ranges::for_each(std::views::iota(0, 4), [&](auto) {
     Mat3x3 second{first};
-    for ([[maybe_unused]] const auto y : {1, 2, 3, 4}) {
+    std::ranges::for_each(std::views::iota(0, 4), [&](auto) {
       Mat3x3 third{second};
-      for ([[maybe_unused]] const auto z : {1, 2, 3, 4}) {
+      std::ranges::for_each(std::views::iota(0, 4), [&](auto) {
         uniqueRotations.insert(third);
         third = third * rotZ;
-      }
+      });
       second = second * rotY;
-    }
+    });
     first = first * rotX;
-  }
+  });
+
   return std::vector<Mat3x3>{uniqueRotations.begin(), uniqueRotations.end()};
 }()};
 
